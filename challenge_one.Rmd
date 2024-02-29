@@ -24,12 +24,13 @@ d <- d |>
   filter (startYear >= 1920 & startYear <= 1979) |> 
   filter (runtimeMinutes >= 60 & runtimeMinutes <= 180) |>
   mutate(decade = case_when (
-  startYear <= 1920 ~ "20s",
-  startYear <= 1930 ~ "30s",
-  startYear <= 1940 ~ "40s",
-  startYear <= 1950 ~ "50s",
-  startYear <= 1960 ~ "60s",
-  startYear > 1970 ~ "70s"))
+  startYear >= 1970 ~ "70s",
+  startYear >= 1960 ~ "60s",
+  startYear >= 1950 ~ "50s",
+  startYear >= 1940 ~ "40s",
+  startYear >= 1930 ~ "30s",
+  startYear >= 1920 ~ "20s"
+  ))
 ```
 
 ## Step 3 
@@ -54,4 +55,27 @@ results <- d %>% group_by(decade) %>%
     sd= sd(runtimeMinutes))
 ```
 
-## Step 5
+## Step 5 and Step 6
+Sample 100 movies, without replacement, from each decade and calculate the single sample mean and single sample standard deviation in runtimeMinutes for each decade. Calculate for each decade the standard error around the estimate of the population mean runtimeMinutes based on the above sample
+
+I wanted to maintain a copy of d that was not grouped, so I created a new dataframe, s, that is a copy of d. I also combined step six into step five just to keep the code neat!
+
+```
+{r}
+s <- d
+results_sampled <- s %>% 
+  group_by(decade) %>% 
+  slice_sample (n=100, replace = FALSE) %>%
+  summarize (n = n(),
+    mean= mean(runtimeMinutes),
+    sd = sd(runtimeMinutes),
+    se = sd/sqrt(n))
+```
+
+## Step 7
+Compare the results from the actual population mean 
+
+```
+{r}
+compare   
+```

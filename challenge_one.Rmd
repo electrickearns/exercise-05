@@ -6,6 +6,13 @@ output: html_document
 ---
 
 ## Step 1
+Pre-work: Load and activate all needed packages. Tidyverse comes with dplyr and ggplot, both we use here:
+```
+{r}
+install.packages ("tidyverse")
+library (tidyverse)
+```
+
 Load the data IMDB-movies as a tibble named d.
 
 ```
@@ -52,18 +59,17 @@ Calculate population mean and standard deviation in runtimeMinutes for each deca
 results <- d %>% group_by(decade) %>% 
   summarize (n = n(),
     mean= mean(runtimeMinutes),
-    sd= sd(runtimeMinutes))
+    sd= sd(runtimeMinutes),
+    se = sd/sqrt(n))
 ```
 
 ## Step 5 and Step 6
 Sample 100 movies, without replacement, from each decade and calculate the single sample mean and single sample standard deviation in runtimeMinutes for each decade. Calculate for each decade the standard error around the estimate of the population mean runtimeMinutes based on the above sample
 
-I wanted to maintain a copy of d that was not grouped, so I created a new dataframe, s, that is a copy of d. I also combined step six into step five just to keep the code neat!
 
 ```
 {r}
-s <- d
-results_sampled <- s %>% 
+results_sampled <- d %>% 
   group_by(decade) %>% 
   slice_sample (n=100, replace = FALSE) %>%
   summarize (n = n(),
@@ -73,9 +79,58 @@ results_sampled <- s %>%
 ```
 
 ## Step 7
-Compare the results from the actual population mean 
+The difference between the actual population mean and the sampled population mean differs by decade, ranging between .5- around 4 minutes difference in random samples. There is no pattern on which mean tends to be higher or lower. 
+
+The calculated SE from both the true population and the sampled results varies far less, with the SE in the true population being smaller in every case.
+
+I did not want to leave this step without any code, so I made a simple table with both values from both populations. 
 
 ```
 {r}
-compare   
+comparison_table <- data.frame (decade = results$decade,
+  true_pop_mean= results$mean,
+  sam_pop_mean= results_sampled$mean,
+  true_pop_se= results$se,
+  sam_pop_se= results_sampled$se)
+print(comparison_table)  
+```
+
+## Step 8
+Generate a sampling distribution of mean runtimeMinutes for each decade from 1000 random samples of 100 movies from each decade without replacement. 
+
+```
+{r}
+n_perm <- 1000
+perm <- vector(length= n_perm)
+s <- d
+
+for (i in 1:n_perm){
+sampling_distribution <- s %>% 
+  group_by(decade) %>% 
+  slice_sample (n=100, replace = FALSE)
+  } 
+```
+
+## Step 9 
+Calculate the mean and standard deviation of the sampling distribution for each decade. Then, plot a histogram of the sampling distribution for each decade, making a foam-finger like shape.
+```
+{r}
+sampled_stats <- sampling_distribution %>%
+  summarize (n = n(),
+    mean= mean(runtimeMinutes),
+    sd = sd(runtimeMinutes),
+    se= sd/sqrt(n))
+    
+ggplot(sampling_distribution, aes(x = runtimeMinutes)) + geom_histogram(binwidth=10, fill= "red") + facet_wrap(~ decade)
+```
+
+## Step 10
+Compare the standard error in runtimeMinutes for samples of size 100 from each decade from multiple sources. Sam_pop_se is from the first sample of 100 movies, true_pop_se is from calculated from the known population standard deviations for each decade, and sample_distribution_se is from the sampling distribution of sample means for each decade. 
+
+```
+se_comparison_table <- data.frame (decade = results$decade,
+  sam_pop_se= results_sampled$se,
+  true_pop_se= results$se,
+  sample_distribution_se= sampled_stats$se)
+print(se_comparison_table) 
 ```

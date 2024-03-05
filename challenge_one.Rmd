@@ -59,7 +59,7 @@ Calculate population mean and standard deviation in runtimeMinutes for each deca
 results <- d %>% group_by(decade) %>% 
   summarize (n = n(),
     mean= mean(runtimeMinutes),
-    sd= sd(runtimeMinutes),
+    sd= sd(runtimeMinutes)*(sqrt((length(runtimeMinutes)-1)/length(runtimeMinutes))),
     se = sd/sqrt(n))
 ```
 

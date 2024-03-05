@@ -66,10 +66,7 @@ results <- d %>% group_by(decade) %>%
 ## Step 5 and Step 6
 Sample 100 movies, without replacement, from each decade and calculate the single sample mean and single sample standard deviation in runtimeMinutes for each decade. Calculate for each decade the standard error around the estimate of the population mean runtimeMinutes based on the above sample
 
-<<<<<<< HEAD
 
-=======
->>>>>>> f6dd9e181daba4b9be854813dba1133e1ce142ca
 ```
 {r}
 results_sampled <- d %>% 
@@ -95,7 +92,6 @@ comparison_table <- data.frame (decade = results$decade,
   sam_pop_mean= results_sampled$mean,
   true_pop_se= results$se,
   sam_pop_se= results_sampled$se)
-<<<<<<< HEAD
 print(comparison_table)  
 ```
 
@@ -138,21 +134,3 @@ se_comparison_table <- data.frame (decade = results$decade,
   sample_distribution_se= sampled_stats$se)
 print(se_comparison_table) 
 ```
-=======
-print(comparison_table)
-```
-
-## Step 8
-Generate a sampling distribution of mean runtimeMinutes for each decade from 1000 random samples of 100 movies from each decade without replacement.I continued to use s for this to maintain d. 
-
-```
-{r}
-sampling_distribution <- d %>% 
-  group_by(decade) %>% 
-  slice_sample (n=100, replace = FALSE) %>%
-  summarize (n = n(),
-    mean= mean(runtimeMinutes),
-    sd = sd(runtimeMinutes),
-    se = sd/sqrt(n))
-```
->>>>>>> f6dd9e181daba4b9be854813dba1133e1ce142ca

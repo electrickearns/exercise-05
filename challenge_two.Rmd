@@ -1,0 +1,136 @@
+---
+title: "Challenge 2"
+author: "Amber"
+date: "2024-03-05"
+output: html_document
+---
+
+## Step One
+Load in the dataset and necessary packages
+```
+{r}
+install.packages ("tidyverse")
+library (tidyverse)
+
+install.packages ("mosaic")
+library (mosaic)
+```
+
+And the data
+
+```
+{r}
+f <- "https://raw.githubusercontent.com/difiore/ada-2024-datasets/main/zombies.csv"
+z <- read_csv (f, col_names=TRUE)
+```
+
+## Step Two 
+Calculate the population mean and standard deviation for each quantitive random variable in the dataset (height, weight, age, number of zombies killed, and years of education)
+
+To begin, I created a function to calculate the population standard deviation for ease of calculation:
+```
+{r}
+sd_pop=function(x){
+  sd(x)*sqrt((length(x)-1)/length(x))
+  }
+```
+
+And then calculated each:
+```
+{r}
+mean_height <- mean(z$height)
+sd_height <- sd(z$height)
+mean_weight <- mean(z$weight)
+sd_weight <- sd(z$weight)
+mean_age <- mean(z$age)
+sd_age <- sd(z$age)
+mean_kills <- mean(z$zombies_killed)
+sd_kills <- sd(z$zombies_killed)
+mean_edu <- mean(z$years_of_education)
+sd_edu <- sd(z$years_of_education)
+```
+
+## Step three
+Use {ggplot} to make boxplots of each of these by gender. I struggled a lot with this step and still could not figure out how to expand the values to unsquish the variables with smaller values. To begin, I separated the dataset into male and female, then shifted my data into long format to allow for the use of face_grid.  
+
+```
+{r}
+#separate data into two datasets for sex
+z_female <- filter (z, gender=="Female")
+z_male <- filter (z, gender=="Male")
+
+# separate out the variables we want to use in facet_grid
+fem_long <- pivot_longer(z_female, c("height", "weight", "age", "zombies_killed", "years_of_education"), names_to = "Variable",
+    values_to = "Value")
+m_long <- pivot_longer(z_male, c("height", "weight", "age", "zombies_killed", "years_of_education"), names_to = "Variable",
+    values_to = "Value")
+
+p <- ggplot(data = fem_long, aes(x = factor(0), y = Value)) + geom_boxplot(na.rm = TRUE,
+    outlier.shape = NA) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()) + geom_dotplot(binaxis = "y", stackdir = "center",
+    stackratio = 0.2, alpha = 0.3, dotsize = 0.5, color = NA, fill = "red", na.rm = TRUE) +
+    facet_grid(. ~ Variable) + geom_rug(sides = "l")
+#to view plot
+p
+
+q <- ggplot(data = m_long, aes(x = factor(0), y = Value)) + geom_boxplot(na.rm = TRUE,
+    outlier.shape = NA) + theme(axis.title.x = element_blank(), axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()) + geom_dotplot(binaxis = "y", stackdir = "center",
+    stackratio = 0.2, alpha = 0.3, dotsize = 0.5, color = NA, fill = "blue", na.rm = TRUE) +
+    facet_grid(. ~ Variable) + geom_rug(sides = "l")
+# to view plot
+q
+```
+
+## Step Four
+Use {ggplot} to make scatterplots of height and weight in realtion to age (age as x variable), using different colored points for males versus females.
+
+```
+{r}
+hplot <- ggplot (data = z, aes(x=age, y=height, color = factor(gender))) + geom_point(na.rm=TRUE)
+wplot <- ggplot (data= z, aes(x=age, y=weight, color = factor(gender))) + geom_point(na.rm=TRUE)
+```
+
+In both height and weight, the males had generally higher scores. With height, the difference in sexes became more pronounced after around age 20. With weight, the differences became less pronounced after around age 20, but the change in difference was less pronounced overall. 
+
+## Step Five
+Using histograms and Q-Q plots, check whether each of the quantitive variables seems to be drawn from normal distribution.Unfortunately, like in class, the plotDist function did not actively overlap the histogram and I was unable to get an alternative function to work, but they can be visually compared.
+
+Checking:
+```
+{r}
+# age
+hist (z$age)
+plotDist ("norm", add=TRUE)
+qqnorm(z$age, pch = 1, frame = FALSE)
+qqline(z$age, col = "steelblue", lwd = 2)
+
+# height
+hist (z$height)
+plotDist ("norm", add=TRUE)
+qqnorm(z$height, pch = 1, frame = FALSE)
+qqline(z$height, col = "steelblue", lwd = 2)
+
+# weight
+hist (z$weight)
+plotDist ("norm", add=TRUE)
+qqnorm(z$weight, pch = 1, frame = FALSE)
+qqline(z$weight, col = "steelblue", lwd = 2)
+
+# zombie kills
+hist (z$zombies_killed)
+plotDist ("norm", add=TRUE)
+qqnorm(z$zombies_killed, pch = 1, frame = FALSE)
+qqline(z$zombies_killed, col = "steelblue", lwd = 2)
+
+# years of education
+hist (z$years_of_education)
+plotDist ("norm", add=TRUE)
+qqnorm(z$years_of_education, pch = 1, frame = FALSE)
+qqline(z$years_of_education, col = "steelblue", lwd = 2)
+```
+
+Weight, height, and age are drawn from normal distribution.
+Zombies killed and years of education are not. 
+
+## Step 6

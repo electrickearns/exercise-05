@@ -134,3 +134,139 @@ Weight, height, and age are drawn from normal distribution.
 Zombies killed and years of education are not. 
 
 ## Step 6
+
+I've started by sampling a subset of 50 zombie apocalypse survivors without replacement and calculating the mean and standard deviation for each variable, as well as the standard error. 
+```
+{r}
+results_sampled <- z %>% 
+  slice_sample (n=50, replace = FALSE) %>%
+  summarize (n = n(),
+    m_age = mean(age),
+    sd_age = sd(age),
+    se_age = sd_age/sqrt(n),
+    m_height = mean(height),
+    sd_height = sd(height),
+    se_height = sd_height/sqrt(n),
+    m_weight = mean(weight),
+    sd_weight = sd(weight),
+    se_weight = sd_weight/sqrt(n),
+    m_kills = mean(zombies_killed),
+    sd_kills = sd(zombies_killed),
+    se_kills = sd_kills/sqrt(n),
+    m_edu = mean(years_of_education),
+    sd_edu = sd(years_of_education),
+    se_edu = sd_edu/sqrt(n))
+```
+
+Now I will use these stats to construct a theoretical 95% confidence interval for each mean. Again, there is likely a neater way to do it, but I could not quite get a function to work quite right.
+```
+{r}
+alpha <- 1 - 95/100
+(ci_age <- results_sampled$m_age + c(-1, 1) * qnorm(1 - alpha/2) * results_sampled$se_age)
+(ci_weight <- results_sampled$m_weight + c(-1, 1) * qnorm(1 - alpha/2) * results_sampled$se_weight)
+(ci_height <- results_sampled$m_height + c(-1, 1) * qnorm(1 - alpha/2) * results_sampled$se_height)
+(ci_kills <- results_sampled$m_kills + c(-1, 1) * qnorm(1 - alpha/2) * results_sampled$se_kills)
+(ci_edu <- results_sampled$m_edu + c(-1, 1) * qnorm(1 - alpha/2) * results_sampled$se_edu)
+```
+
+## Step 7
+Then draw another 199 random samples of 50 zombie apocalypse survivors and calculate the mean for each of these. I tried a few ways of adding the materials of results_sampled to his, and couldn't quite get it to work, so I just did 200 random samples instead:
+```
+{r}
+n_reps <- 200
+reps <- vector(length=200)
+s <- z
+
+for (i in 1:n_reps){
+sampling_distribution <- s %>% 
+  slice_sample (n=50, replace = FALSE)
+  }
+  
+sampled_stats <- sampling_distribution %>%  
+  summarize (n = n(),
+    sam_mean_age = mean(age),
+    sam_sd_age = sd(age),
+    sam_mean_height = mean(height),
+    sam_sd_height = sd(height),
+    sam_mean_weight = mean(weight),
+    sam_sd_weight = sd(weight),
+    sam_mean_kills = mean(zombies_killed),
+    sam_sd_kills = sd(zombies_killed),
+    sam_mean_edu = mean(years_of_education),
+    sam_sd_edu = sd(years_of_education))
+  
+  view(sampled_stats)
+```
+
+The standard deviations of the sampling distribution are within the standard error of the standard deviations of the results from the original sample, seen in results_sampled. 
+
+## Step 8
+Plot the sampling distributions for each variable mean. 
+
+```
+ggplot(sampling_distribution, aes(x = age)) + geom_histogram(binwidth=2, fill= "red") 
+ggplot(sampling_distribution, aes(x = height)) + geom_histogram(binwidth=5, fill= "green") 
+ggplot(sampling_distribution, aes(x = weight)) + geom_histogram(binwidth=5, fill= "blue") 
+ggplot(sampling_distribution, aes(x = zombies_killed)) + geom_histogram(binwidth=2, fill= "purple") 
+ggplot(sampling_distribution, aes(x = years_of_education)) + geom_histogram(binwidth=2, fill= "orange") 
+```
+
+## Step 9
+Construct a 95% confidence interval for each mean from the sampling distribution of sample means
+```
+{r}
+(ci_age_samp <- quantile(sampling_distribution$age, c(0.025,0.975)))
+(ci_height_samp <- quantile(sampling_distribution$height, c(0.025,0.975)))
+(ci_weight_samp <- quantile(sampling_distribution$weight, c(0.025,0.975)))
+(ci_kills_samp <- quantile(sampling_distribution$zombies_killed, c(0.025,0.975)))
+(ci_edu_samp <- quantile(sampling_distribution$years_of_education, c(0.025,0.975)))
+```
+How do the sampling_distribution CIs compare to the CI based on one sample?
+
+The CIs from the sampling_distribution set have a wider range; the lower number is lower and the higher number is higher. 
+
+## Step 10
+```
+{r}
+# age
+n_boot <- 10000
+boot_age <- vector(length = n_boot)  
+n <- length(z)
+
+for (i in 1:n_boot) {
+    boot_age [[i]] <- mean(sample(z$age, n, replace = TRUE))
+}
+(ci_boot_age <- quantile(boot_age, c(0.025,0.975)))
+
+# height
+boot_height <- vector(length = n_boot)  
+
+for (i in 1:n_boot) {
+    boot_height [[i]] <- mean(sample(z$height, n, replace = TRUE))
+}
+(ci_boot_height <- quantile(boot_height, c(0.025,0.975)))
+
+# weight
+boot_weight <- vector(length = n_boot)  
+
+for (i in 1:n_boot) {
+    boot_weight [[i]] <- mean(sample(z$weight, n, replace = TRUE))
+}
+(ci_boot_weight <- quantile(boot_weight, c(0.025,0.975)))
+
+# zombies killed
+boot_kills <- vector(length = n_boot)  
+
+for (i in 1:n_boot) {
+    boot_kills [[i]] <- mean(sample(z$zombies_killed, n, replace = TRUE))
+}
+(ci_boot_kills <- quantile(boot_kills, c(0.025,0.975)))
+
+# years of education
+boot_edu <- vector(length = n_boot)  
+
+for (i in 1:n_boot) {
+    boot_edu [[i]] <- mean(sample(z$years_of_education, n, replace = TRUE))
+}
+(ci_boot_edu <- quantile(boot_edu, c(0.025,0.975)))
+```
